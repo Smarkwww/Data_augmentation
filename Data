@@ -1,1 +1,72 @@
+import numpy as np
+import cv2
+from google.colab import drive
+import os
+import random
+import shutil
+drive.mount('/content/gdrive')
+os.chdir("/content/gdrive/MyDrive/智泰/HighSchool/train_new")
+!ls
 
+path = '/content/gdrive/MyDrive/智泰/HighSchool/train_new'
+path_out = '/content/gdrive/MyDrive/智泰/HighSchool/train_data'
+if not os.path.exists(path_out):
+  os.mkdir(path_out)
+filename = []
+typename = []
+out = []
+for fname in os.listdir(path):
+    filename.append(str(os.path.join(path, fname)))
+
+for i in filename:
+  i = i.replace('/content/gdrive/MyDrive/智泰/HighSchool/train_new','').replace(' (1)',"")
+  typename.append(i)
+  i = path_out+i
+  print(i)
+  if not os.path.exists(i):
+    os.mkdir(i)
+    print('make')
+  out.append(i)
+
+i = 0
+for fname in filename:
+    j = 1
+    for pic in os.listdir(fname):
+      print(os.path.join(fname,pic))
+      img = cv2.imread(os.path.join(fname,pic))
+      print(img.shape)
+      w,h,d = img.shape
+      if w >= 300 and h>=300:
+        if w > h:
+          w = int((w-h)/2)
+          img = img[w:w+h,0:h]
+        elif w < h:
+          h = int((h-w)/2)
+          img = img[0:w,h:h+w]
+        
+      img = cv2.resize(img,(300,300))
+      print(img.shape)
+      R = cv2.getRotationMatrix2D((150,150),90,1)
+      L = cv2.getRotationMatrix2D((150,150),270,1)
+      rolate_img_r = cv2.warpAffine(img,R,(300,300))
+      rolate_img_l = cv2.warpAffine(img,L,(300,300))
+      blur = cv2.GaussianBlur(img,(25,25),0)#(25,25)可調成(5,5) 會較不模糊 
+      blur_r = cv2.GaussianBlur(rolate_img_r,(25,25),0)#(25,25)可調成(5,5) 會較不模糊 
+      blur_l = cv2.GaussianBlur(rolate_img_l,(25,25),0)#(25,25)可調成(5,5) 會較不模糊 
+      print(rolate_img_r.shape)
+      cv2.imwrite(out[i]+typename[i]+str(j)+'.jpg',img)
+      cv2.imwrite(out[i]+typename[i]+'_R_'+str(j)+'.jpg',rolate_img_r)
+      cv2.imwrite(out[i]+typename[i]+'_L_'+str(j)+'.jpg',rolate_img_l)
+      cv2.imwrite(out[i]+typename[i]+'_blur_'+str(j)+'.jpg',blur)
+      cv2.imwrite(out[i]+typename[i]+'_blur_r_'+str(j)+'.jpg',blur_r)
+      cv2.imwrite(out[i]+typename[i]+'_blur_l_'+str(j)+'.jpg',blur_l)
+      
+      #print(out[i]+typename[i]+str(i+1)+'.jpg')
+      if os.path.isfile(out[i]+typename[i]+str(j)+'.jpg'):
+        print('done {}'.format(i+1))
+      j = j+1
+    i = i+1
+ 
+ 
+ #刪除dic用
+#shutil.rmtree(path_out)
